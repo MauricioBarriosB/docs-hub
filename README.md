@@ -22,8 +22,7 @@ the sibling `backend/` project.
 
 > Tailwind is wired the v4 CSS-first way (no `tailwind.config.js` / `postcss.config.js`):
 > the `@tailwindcss/vite` plugin in `vite.config.ts`, plus `@import`, `@plugin` and
-> `@source` directives in `src/styles/globals.css`. Do **not** downgrade to Tailwind v3 —
-> the `heroui()` plugin emits no styles under v3 and every component renders unstyled.
+> `@source` directives in `src/styles/globals.css`.
 
 ---
 
