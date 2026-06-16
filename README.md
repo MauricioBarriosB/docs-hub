@@ -187,7 +187,6 @@ For the deployed site to reach the API:
 
 - TypeScript strict; explicit prop types; no `any` — components consume the generated DTO
   types that mirror the backend's camelCase fields.
-- Prefer HeroUI components over hand-rolled ones; theme via Tailwind tokens, not inline color.
 - Data fetching lives in hooks; presentation lives in components.
 - Persisted UI state (theme, sidebar selection) goes through a small `localStorage` helper
   with versioned keys and is restored on mount.
