@@ -123,7 +123,7 @@ prefixed with `VITE_`.
 > to 5174, whose origin the API would reject).
 
 ```bash
-cd /c/wamp64/www/docs-hub/frontend
+cd /c/www/docs-hub/frontend
 
 # install dependencies
 npm install
