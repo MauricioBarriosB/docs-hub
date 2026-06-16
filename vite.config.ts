@@ -21,7 +21,9 @@ function manualChunks(id: string): string | undefined {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // Sub-path base only for the production build (GitHub Pages); '/' for the dev server.
+  base: command === 'build' ? '/docs-hub/' : '/',
   plugins: [react(), tailwindcss()],
   // Pin the dev server to 5173 so its origin always matches the backend CORS
   // allow-list. strictPort makes Vite fail loudly if 5173 is taken instead of
@@ -42,4 +44,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

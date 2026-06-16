@@ -49,9 +49,13 @@ if (!rootElement) {
   throw new Error('Root element #root not found');
 }
 
+// Vite injects BASE_URL from `base` ('/docs-hub/'); React Router wants the
+// basename without a trailing slash ('' === root).
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Providers />
     </BrowserRouter>
   </StrictMode>,
