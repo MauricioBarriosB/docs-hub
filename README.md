@@ -66,7 +66,7 @@ the sibling `backend/` project.
 - All admin routes sit behind an auth **and** role check; non-admins are redirected.
 
 ### Security on the client
-- ** ⚠️ HMAC request signing** — every `/api` request is signed (`X-Client-Id`, `X-Timestamp`,
+- ⚠️ HMAC request signing — every `/api` request is signed (`X-Client-Id`, `X-Timestamp`,
   `X-Nonce`, `X-Signature`) to match the backend's client-auth filter. This runs for
   anonymous/public requests too.
 - Downloads go through an **authenticated, signed blob request** (not a bare `<a href>`),
@@ -80,7 +80,6 @@ the sibling `backend/` project.
 frontend/
 ├── index.html                 # app shell (single #root mount point)
 ├── vite.config.ts             # React + Tailwind v4 plugins, vendor chunking, base path
-├── hero.ts                    # HeroUI Tailwind v4 plugin entry (exports heroui())
 ├── tsconfig.json
 ├── .env                       # VITE_API_BASE_URL, HMAC client id/secret, mocks flag
 └── src/
