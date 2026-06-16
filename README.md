@@ -1,8 +1,9 @@
-# docs-hub
+# Docs-Hub
 
 Single-page application for the **docs-hub** document repository: a place where registered
 users upload documents, an administrator moderates every submission, and anyone (login required) can browse, 
 search and download the documents that have been **published**.
+
 ---
 
 ## Tech stack
