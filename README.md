@@ -36,9 +36,6 @@ search and download the documents that have been **published**.
 - **Category sidebar** — two expandable accordion menus, **Languages** and **Technologies**,
   populated from the API. The current selection **persists in `localStorage`** and is
   restored on reload. Collapses to a drawer on small screens.
-- **Document detail page** (`/documents/:id`) — a dedicated view with the full metadata and a
-  download button. **Login is required** to open it; anonymous users are redirected to the
-  login page and returned to the document after signing in.
 - **Light / dark theme toggle** — persisted in `localStorage` and applied via a `.dark`
   class on `<html>`.
 
@@ -48,6 +45,9 @@ search and download the documents that have been **published**.
   transparently performs a single refresh-token retry on a `401`, then replays the request.
 - Auth state lives in a React context; tokens are kept in a small token store and mirrored to
   `localStorage` so a refresh survives reloads.
+- **Document detail page** (`/documents/:id`) — a dedicated view with the full metadata and a
+  download button. **Login is required** to open it; anonymous users are redirected to the
+  login page and returned to the document after signing in.
 
 ### Registered-user features
 - **Upload** (`multipart/form-data`): title, description, one or more categories, and a file.
