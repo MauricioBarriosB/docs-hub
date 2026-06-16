@@ -1,7 +1,7 @@
-# docs-hub — Frontend
+# docs-hub
 
 Single-page application for the **docs-hub** document repository: a place where registered
-users upload documents, an administrator moderates every submission, and **anyone** (no
+users upload documents, an administrator moderates every submission, and anyone (
 login required) can browse, search and download the documents that have been **published**.
 
 This package is the React SPA. It talks to the CodeIgniter 4 + SQLite JSON API that lives in
