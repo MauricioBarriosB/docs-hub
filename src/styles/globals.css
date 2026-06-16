@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* HeroUI (Tailwind v4 setup). Paths are relative to THIS file.
+ * NOTE: @heroui/theme is NOT hoisted to the top-level node_modules in this install
+ * (it's nested under @heroui/react/node_modules), and its class strings live in
+ * .mjs files. Both @source lines below are needed so Tailwind generates the
+ * HeroUI component utilities (shadow-medium, p-1, popover/modal internals, …).
+ * Without this, overlay components (Dropdown/Modal/Popover) render unstyled. */
+@plugin "../../hero.ts";
+@source "../../node_modules/@heroui/theme/dist/**/*.{js,mjs}";
+@source "../../node_modules/@heroui/react/node_modules/@heroui/theme/dist/**/*.{js,mjs}";
+
+/* Theme toggle adds the `dark` class on <html> (see ThemeContext). */
+@custom-variant dark (&:is(.dark *));
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-background text-foreground;
+  margin: 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Thin, theme-aware scrollbars. HeroUI exposes its palette as HSL CSS vars
+ * (`--heroui-default-*`), so the thumb adapts automatically to dark/light. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--heroui-default-300)) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--heroui-default-300));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--heroui-default-400));
+}
