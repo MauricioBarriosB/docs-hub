@@ -44,6 +44,10 @@ jobs:
 
             - name: Setup Pages
               uses: actions/configure-pages@v5
+              with:
+                  # Habilita Pages vía API si aún no está activado (evita el error
+                  # "Get Pages site failed ... Not Found" en el primer despliegue).
+                  enablement: true
 
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v4
