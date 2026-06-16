@@ -108,9 +108,9 @@ prefixed with `VITE_`.
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | yes (prod) | Backend origin, **no** trailing slash, **no** `/api` suffix — e.g. `http://localhost:8080` or `https://capacitaenlinea.cl/docshubapi/public/index.php`. Falls back to `http://localhost:8080` when unset. |
-| `VITE_API_CLIENT_ID` | recommended | HMAC client identifier sent as `X-Client-Id`. Defaults to `docshub-web`. |
-| `VITE_API_CLIENT_SECRET` | recommended | Shared HMAC key; **must match the backend byte-for-byte**. (Shipped in the bundle — not truly secret.) |
+| `VITE_API_BASE_URL` | yes (prod) | Backend origin, **no** trailing slash, **no** `/api` suffix — e.g. `http://localhost:8080`. Falls back to `http://localhost:8080` when unset. |
+| `VITE_API_CLIENT_ID` | recommended | HMAC client identifier sent as `X-Client-Id`.|
+| `VITE_API_CLIENT_SECRET` | recommended | Shared HMAC key; **must match the backend byte-for-byte**. |
 | `VITE_USE_MOCKS` | no | `true` serves bundled mock data when the API is unreachable (dev convenience only). |
 
 ---
