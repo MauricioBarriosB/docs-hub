@@ -15,9 +15,6 @@ the sibling `backend/` project.
 | --- | --- |
 | UI library | **React 19** + **TypeScript** (strict) |
 | Build tool / dev server | **Vite** |
-| Component kit | **HeroUI** (`@heroui/react` v2.8) |
-| Styling | **Tailwind CSS v4** (CSS-first config, required by HeroUI) |
-| Animation | **framer-motion** (HeroUI peer dependency) |
 | Data fetching / caching | **TanStack Query** (`@tanstack/react-query`) |
 | Routing | **React Router** v7 |
 | HTTP client | **axios** (typed wrapper with interceptors) |
