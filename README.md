@@ -1,8 +1,8 @@
 # docs-hub
 
 Single-page application for the **docs-hub** document repository: a place where registered
-users upload documents, an administrator moderates every submission, and anyone (
-login required) can browse, search and download the documents that have been **published**.
+users upload documents, an administrator moderates every submission, and anyone (login required) can browse, 
+search and download the documents that have been **published**.
 
 This package is the React SPA. It talks to the CodeIgniter 4 + SQLite JSON API that lives in
 the sibling `backend/` project.
@@ -66,12 +66,9 @@ the sibling `backend/` project.
 - All admin routes sit behind an auth **and** role check; non-admins are redirected.
 
 ### Security on the client
-- **HMAC request signing** — every `/api` request is signed (`X-Client-Id`, `X-Timestamp`,
+- ** ⚠️ HMAC request signing** — every `/api` request is signed (`X-Client-Id`, `X-Timestamp`,
   `X-Nonce`, `X-Signature`) to match the backend's client-auth filter. This runs for
   anonymous/public requests too.
-  > ⚠️ The signing key ships in the JS bundle (`VITE_*` vars are inlined at build time), so
-  > it is **not** truly secret — it raises the bar against casual abuse/replay, it does not
-  > hide the key from a determined attacker. Rotate it for production.
 - Downloads go through an **authenticated, signed blob request** (not a bare `<a href>`),
   because the backend rejects unsigned download URLs.
 
