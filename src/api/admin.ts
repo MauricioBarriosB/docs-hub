@@ -13,6 +13,7 @@ import type {
   CreateUserRequest,
   DocumentItem,
   DocumentStatus,
+  DownloadLogItem,
   Paginated,
   UpdateCategoryRequest,
   UpdateDocumentRequest,
@@ -31,9 +32,12 @@ export interface AdminDocumentQuery {
   /** Omit / null for all statuses; the backend defaults the queue to pending. */
   status?: DocumentStatus | null;
   search?: string;
+  /** Sort column token: title|author|status|download_count|created_at. */
+  sort?: string;
+  order?: 'asc' | 'desc';
 }
 
-/** GET /api/admin/documents?status=&page=&perPage=&search= */
+/** GET /api/admin/documents?status=&page=&perPage=&search=&sort=&order= */
 export function fetchAdminDocuments(
   query: AdminDocumentQuery,
   signal?: AbortSignal,
@@ -45,6 +49,8 @@ export function fetchAdminDocuments(
       perPage: query.perPage,
       status: query.status ?? undefined,
       search: query.search?.trim() || undefined,
+      sort: query.sort || undefined,
+      order: query.order || undefined,
     },
   });
 }
@@ -72,8 +78,12 @@ export function updateDocument(
 ): Promise<DocumentItem> {
   const form = new FormData();
   if (payload.title !== undefined) form.append('title', payload.title);
-  // Always send description so an emptied field clears it server-side.
+  // Always send these so an emptied field clears it server-side.
   if (payload.description !== undefined) form.append('description', payload.description ?? '');
+  if (payload.publisherName !== undefined) form.append('publisher_name', payload.publisherName ?? '');
+  if (payload.writersNames !== undefined) form.append('writers_names', payload.writersNames ?? '');
+  if (payload.yearIssue !== undefined) form.append('year_issue', payload.yearIssue == null ? '' : String(payload.yearIssue));
+  if (payload.pagesCount !== undefined) form.append('pages_count', payload.pagesCount == null ? '' : String(payload.pagesCount));
   for (const id of payload.categoryIds ?? []) {
     form.append('categoryIds[]', String(id));
   }
@@ -84,6 +94,36 @@ export function updateDocument(
 /** DELETE /api/admin/documents/:id — soft delete + remove stored file. */
 export function deleteDocument(id: number): Promise<void> {
   return apiClient.delete<void>(`/admin/documents/${id}`);
+}
+
+export interface AdminDownloadQuery {
+  page: number;
+  perPage: number;
+  /** Filter to a single user's downloads. */
+  userId?: number | null;
+  /** Filter to a single document's downloads. */
+  documentId?: number | null;
+  /** Sort column token: downloaded_at|user|document. */
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+/** GET /api/admin/downloads?userId=&documentId=&page=&perPage=&sort=&order= — per-user download log. */
+export function fetchAdminDownloads(
+  query: AdminDownloadQuery,
+  signal?: AbortSignal,
+): Promise<Paginated<DownloadLogItem>> {
+  return apiClient.get<Paginated<DownloadLogItem>>('/admin/downloads', {
+    signal,
+    query: {
+      page: query.page,
+      perPage: query.perPage,
+      userId: query.userId ?? undefined,
+      documentId: query.documentId ?? undefined,
+      sort: query.sort || undefined,
+      order: query.order || undefined,
+    },
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -118,9 +158,12 @@ export interface AdminUserQuery {
   limit: number;
   offset: number;
   search?: string;
+  /** Sort column token: name|email|role|is_active|last_login|created_at. */
+  sort?: string;
+  order?: 'asc' | 'desc';
 }
 
-/** GET /api/admin/users?limit=&offset=&search= */
+/** GET /api/admin/users?limit=&offset=&search=&sort=&order= */
 export function fetchAdminUsers(
   query: AdminUserQuery,
   signal?: AbortSignal,
@@ -131,6 +174,8 @@ export function fetchAdminUsers(
       limit: query.limit,
       offset: query.offset,
       search: query.search?.trim() || undefined,
+      sort: query.sort || undefined,
+      order: query.order || undefined,
     },
   });
 }

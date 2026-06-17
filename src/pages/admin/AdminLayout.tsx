@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/admin/documents', label: 'Documentos' },
   { to: '/admin/categories', label: 'Categorías' },
   { to: '/admin/users', label: 'Usuarios' },
+  { to: '/admin/downloads', label: 'Descargas' },
 ] as const;
 
 /** Admin shell: left nav + routed admin page. Full features land later. */
@@ -15,7 +16,7 @@ export function AdminLayout() {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-dvh flex-col">
       <header className="flex items-center justify-between border-b border-divider px-4 py-3">
         <div>
           <h1 className="text-lg font-semibold">Panel de administración</h1>

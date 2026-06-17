@@ -1,18 +1,5 @@
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Chip,
-  Spinner,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-} from '@heroui/react';
+import { Button, Chip } from '@heroui/react';
 import { toUserMessage } from '@/api/client';
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/api/types';
 import {
@@ -24,6 +11,10 @@ import {
 import { toastError, toastSuccess } from '@/lib/toast';
 import { CategoryFormModal } from '@/components/admin/CategoryFormModal';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { DataTable, type DataTableColumn, type DataTableSort } from '@/components/admin/DataTable';
+
+/** Categories per client-side page. */
+const CATEGORY_PAGE_SIZE = 10;
 
 export function AdminCategories() {
   const { data, isLoading, isError, error, isFetching } = useAdminCategories();
@@ -34,6 +25,8 @@ export function AdminCategories() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<DataTableSort | null>(null);
 
   const categories = data ?? [];
 
@@ -82,68 +75,88 @@ export function AdminCategories() {
     });
   }
 
+  const columns: DataTableColumn<Category>[] = [
+    {
+      key: 'name',
+      label: 'NOMBRE',
+      allowsSorting: true,
+      sortAccessor: (category) => category.name,
+      className: 'font-medium',
+      render: (category) => category.name,
+    },
+    {
+      key: 'slug',
+      label: 'SLUG',
+      allowsSorting: true,
+      sortAccessor: (category) => category.slug,
+      className: 'text-default-500',
+      render: (category) => category.slug,
+    },
+    {
+      key: 'type',
+      label: 'TIPO',
+      allowsSorting: true,
+      sortAccessor: (category) => category.type,
+      render: (category) => (
+        <Chip size="sm" variant="flat" color={category.type === 'language' ? 'secondary' : 'primary'}>
+          {category.type === 'language' ? 'Lenguaje' : 'Tecnología'}
+        </Chip>
+      ),
+    },
+    {
+      key: 'icon',
+      label: 'ICONO',
+      className: 'text-default-500',
+      render: (category) => category.icon ?? '—',
+    },
+    {
+      key: 'actions',
+      label: 'ACCIONES',
+      align: 'end',
+      render: (category) => (
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="flat" onPress={() => openEdit(category)}>
+            Editar
+          </Button>
+          <Button size="sm" color="danger" variant="flat" onPress={() => setDeleting(category)}>
+            Eliminar
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
-      <Card>
-        <CardHeader className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Categorías</h2>
-            {isFetching && <Spinner size="sm" aria-label="Actualizando" />}
-          </div>
+      <DataTable
+        aria-label="Categorías"
+        title={<h2 className="text-lg font-semibold">Categorías</h2>}
+        columns={columns}
+        items={categories}
+        getRowKey={(category) => category.id}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        errorMessage={isError ? toUserMessage(error) : null}
+        emptyContent="No hay categorías."
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: 'Buscar por nombre o slug',
+        }}
+        sort={sort}
+        onSortChange={setSort}
+        clientPaging={{
+          pageSize: CATEGORY_PAGE_SIZE,
+          globalFilter: (category, query) =>
+            category.name.toLowerCase().includes(query) ||
+            category.slug.toLowerCase().includes(query),
+        }}
+        headerActions={
           <Button color="primary" onPress={openCreate}>
             Nueva categoría
           </Button>
-        </CardHeader>
-        <CardBody>
-          <Table aria-label="Categorías" removeWrapper>
-            <TableHeader>
-              <TableColumn>NOMBRE</TableColumn>
-              <TableColumn>SLUG</TableColumn>
-              <TableColumn>TIPO</TableColumn>
-              <TableColumn>ICONO</TableColumn>
-              <TableColumn align="end">ACCIONES</TableColumn>
-            </TableHeader>
-            <TableBody
-              items={categories}
-              isLoading={isLoading}
-              loadingContent={<Spinner label="Cargando categorías…" />}
-              emptyContent={isError ? toUserMessage(error) : 'No hay categorías.'}
-            >
-              {(category: Category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="text-default-500">{category.slug}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color={category.type === 'language' ? 'secondary' : 'primary'}
-                    >
-                      {category.type === 'language' ? 'Lenguaje' : 'Tecnología'}
-                    </Chip>
-                  </TableCell>
-                  <TableCell className="text-default-500">{category.icon ?? '—'}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="flat" onPress={() => openEdit(category)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        color="danger"
-                        variant="flat"
-                        onPress={() => setDeleting(category)}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardBody>
-      </Card>
+        }
+      />
 
       <CategoryFormModal
         isOpen={formOpen}

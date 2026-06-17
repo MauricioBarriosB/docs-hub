@@ -13,7 +13,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onNavigate }: Readonly<SidebarProps>) {
-  const { data, isLoading, isError, error, refetch } = useCategories();
+  // Only show categories that actually have published documents.
+  const { data, isLoading, isError, error, refetch } = useCategories({ inUse: true });
   const { selection, select, clear } = useSidebarSelection();
   const navigate = useNavigate();
   const grouped = splitCategories(data);

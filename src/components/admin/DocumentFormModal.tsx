@@ -40,6 +40,10 @@ export function DocumentFormModal({
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [publisherName, setPublisherName] = useState('');
+  const [writersNames, setWritersNames] = useState('');
+  const [yearIssue, setYearIssue] = useState('');
+  const [pagesCount, setPagesCount] = useState('');
   const [categoryIds, setCategoryIds] = useState<Set<string>>(new Set());
   const [file, setFile] = useState<File | null>(null);
   const [touched, setTouched] = useState(false);
@@ -48,6 +52,10 @@ export function DocumentFormModal({
     if (!isOpen || !document) return;
     setTitle(document.title);
     setDescription(document.description ?? '');
+    setPublisherName(document.publisherName ?? '');
+    setWritersNames(document.writersNames ?? '');
+    setYearIssue(document.yearIssue != null ? String(document.yearIssue) : '');
+    setPagesCount(document.pagesCount != null ? String(document.pagesCount) : '');
     setCategoryIds(new Set(document.categories.map((category) => String(category.id))));
     setFile(null);
     setTouched(false);
@@ -64,11 +72,19 @@ export function DocumentFormModal({
     if (!document || title.trim() === '') return;
 
     const trimmedDescription = description.trim();
+    const trimmedPublisher = publisherName.trim();
+    const trimmedWriters = writersNames.trim();
+    const trimmedYear = yearIssue.trim();
+    const trimmedPages = pagesCount.trim();
     onSubmit(
       document.id,
       {
         title: title.trim(),
         description: trimmedDescription === '' ? null : trimmedDescription,
+        publisherName: trimmedPublisher === '' ? null : trimmedPublisher,
+        writersNames: trimmedWriters === '' ? null : trimmedWriters,
+        yearIssue: trimmedYear === '' ? null : Number(trimmedYear),
+        pagesCount: trimmedPages === '' ? null : Number(trimmedPages),
         categoryIds: [...categoryIds].map(Number),
       },
       file,
@@ -90,6 +106,32 @@ export function DocumentFormModal({
             errorMessage={titleInvalid ? 'El título es obligatorio.' : undefined}
           />
           <Textarea label="Descripción" value={description} onValueChange={setDescription} />
+          <Input
+            label="Nombre de la editorial"
+            value={publisherName}
+            onValueChange={setPublisherName}
+          />
+          <Input
+            label="Nombre(s) de autor(es)"
+            value={writersNames}
+            onValueChange={setWritersNames}
+          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              type="number"
+              label="Año de publicación"
+              value={yearIssue}
+              onValueChange={setYearIssue}
+              min={0}
+            />
+            <Input
+              type="number"
+              label="Cantidad de páginas"
+              value={pagesCount}
+              onValueChange={setPagesCount}
+              min={0}
+            />
+          </div>
           <Select
             label="Categorías"
             selectionMode="multiple"

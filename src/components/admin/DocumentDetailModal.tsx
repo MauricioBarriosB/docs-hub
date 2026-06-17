@@ -64,6 +64,18 @@ export function DocumentDetailModal({ document, onClose }: DocumentDetailModalPr
                 {document.fileName} · {document.fileExt.toUpperCase()} ·{' '}
                 {formatFileSize(document.fileSize)}
               </Row>
+              {document.publisherName && (
+                <Row label="Editorial">{document.publisherName}</Row>
+              )}
+              {document.writersNames && (
+                <Row label="Autor(es)">{document.writersNames}</Row>
+              )}
+              {document.yearIssue != null && (
+                <Row label="Año de publicación">{document.yearIssue}</Row>
+              )}
+              {document.pagesCount != null && (
+                <Row label="Cantidad de páginas">{document.pagesCount}</Row>
+              )}
               <Row label="Categorías">
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {document.categories.length === 0 && <span>—</span>}

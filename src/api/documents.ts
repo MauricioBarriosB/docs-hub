@@ -1,7 +1,7 @@
 import { apiClient, NetworkError } from './client';
 import { env } from '@/config/env';
 import { mockDocumentsPage } from './mocks';
-import type { DocumentItem, DocumentListItem, Paginated } from './types';
+import type { DocumentItem, DocumentListItem, DocumentRating, Paginated } from './types';
 
 export interface DocumentQuery {
   page: number;
@@ -47,10 +47,28 @@ export function fetchDocument(id: number, signal?: AbortSignal): Promise<Documen
   return apiClient.get<DocumentItem>(`/documents/${id}`, { anonymous: true, signal });
 }
 
+/**
+ * GET /api/documents/:id/rating — aggregate rating + the current user's own
+ * rating. Requires auth (the bearer token identifies the user).
+ */
+export function fetchMyRating(id: number, signal?: AbortSignal): Promise<DocumentRating> {
+  return apiClient.get<DocumentRating>(`/documents/${id}/rating`, { signal });
+}
+
+/**
+ * POST /api/documents/:id/rating — upsert the current user's 1–5 star rating.
+ * Returns the updated aggregate plus the saved userRating.
+ */
+export function rateDocument(id: number, rating: number): Promise<DocumentRating> {
+  return apiClient.post<DocumentRating>(`/documents/${id}/rating`, { rating });
+}
+
 export interface MyUploadsQuery {
   page: number;
   perPage: number;
   search?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
 }
 
 /**
@@ -67,6 +85,8 @@ export function fetchMyUploads(
       page: query.page,
       perPage: query.perPage,
       search: query.search?.trim() || undefined,
+      sort: query.sort || undefined,
+      order: query.order || undefined,
     },
   });
 }
@@ -76,6 +96,11 @@ export interface UploadDocumentInput {
   description: string;
   categoryIds: number[];
   file: File;
+  /** Optional bibliographic metadata (raw form strings; empty = omitted). */
+  publisherName?: string;
+  writersNames?: string;
+  yearIssue?: string;
+  pagesCount?: string;
 }
 
 /**
@@ -89,6 +114,11 @@ export async function uploadDocument(input: UploadDocumentInput): Promise<Docume
   for (const id of input.categoryIds) {
     form.append('categoryIds[]', String(id));
   }
+  // Optional metadata — only sent when filled in.
+  if (input.publisherName?.trim()) form.append('publisher_name', input.publisherName.trim());
+  if (input.writersNames?.trim()) form.append('writers_names', input.writersNames.trim());
+  if (input.yearIssue?.trim()) form.append('year_issue', input.yearIssue.trim());
+  if (input.pagesCount?.trim()) form.append('pages_count', input.pagesCount.trim());
   form.append('file', input.file);
   const data = await apiClient.upload<DocumentItem>('/documents', form);
   return data;

@@ -1,22 +1,5 @@
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Chip,
-  Input,
-  Pagination,
-  Spinner,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-  Tooltip,
-} from '@heroui/react';
+import { Button, Chip, Switch, Tooltip } from '@heroui/react';
 import { toUserMessage } from '@/api/client';
 import type { CreateUserRequest, UpdateUserRequest, User } from '@/api/types';
 import {
@@ -31,19 +14,20 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAuth } from '@/context/AuthContext';
 import { toastError, toastSuccess } from '@/lib/toast';
 import { formatDate } from '@/lib/format';
-import { SearchIcon } from '@/components/icons';
 import { UserFormModal } from '@/components/admin/UserFormModal';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { DataTable, type DataTableColumn, type DataTableSort } from '@/components/admin/DataTable';
 
 export function AdminUsers() {
   const { user: currentUser } = useAuth();
 
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
+  const [sort, setSort] = useState<DataTableSort | null>(null);
   const search = useDebouncedValue(searchInput, 300);
   const offset = (page - 1) * ADMIN_USER_PAGE_SIZE;
 
-  const { data, isLoading, isError, error, isFetching } = useAdminUsers({ offset, search });
+  const { data, isLoading, isError, error, isFetching } = useAdminUsers({ offset, search, sort });
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const toggleMutation = useToggleUserActive();
@@ -122,132 +106,136 @@ export function AdminUsers() {
     });
   }
 
+  const columns: DataTableColumn<User>[] = [
+    {
+      key: 'name',
+      label: 'NOMBRE',
+      allowsSorting: true,
+      sortField: 'name',
+      className: 'font-medium',
+      render: (user) => (
+        <>
+          {user.name}
+          {isSelf(user) && (
+            <Chip size="sm" variant="flat" color="default" className="ml-2">
+              Tú
+            </Chip>
+          )}
+        </>
+      ),
+    },
+    {
+      key: 'email',
+      label: 'CORREO',
+      allowsSorting: true,
+      sortField: 'email',
+      className: 'text-default-500',
+      render: (user) => user.email,
+    },
+    {
+      key: 'role',
+      label: 'ROL',
+      allowsSorting: true,
+      sortField: 'role',
+      render: (user) => (
+        <Chip size="sm" variant="flat" color={user.role === 'admin' ? 'warning' : 'default'}>
+          {user.role === 'admin' ? 'Administrador' : 'Usuario'}
+        </Chip>
+      ),
+    },
+    {
+      key: 'isActive',
+      label: 'ACTIVO',
+      allowsSorting: true,
+      sortField: 'is_active',
+      render: (user) => (
+        <Tooltip
+          content={
+            isSelf(user) && user.isActive
+              ? 'No puedes desactivar tu propia cuenta'
+              : user.isActive
+                ? 'Desactivar'
+                : 'Activar'
+          }
+        >
+          <span className="inline-flex">
+            <Switch
+              size="sm"
+              isSelected={user.isActive}
+              isDisabled={isSelf(user) && user.isActive}
+              onValueChange={() => handleToggle(user)}
+              aria-label={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+            />
+          </span>
+        </Tooltip>
+      ),
+    },
+    {
+      key: 'lastLogin',
+      label: 'ÚLTIMO ACCESO',
+      allowsSorting: true,
+      sortField: 'last_login',
+      render: (user) => formatDate(user.lastLogin),
+    },
+    {
+      key: 'actions',
+      label: 'ACCIONES',
+      align: 'end',
+      render: (user) => (
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="flat" onPress={() => openEdit(user)}>
+            Editar
+          </Button>
+          <Tooltip content={isSelf(user) ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'}>
+            <span className="inline-flex">
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                isDisabled={isSelf(user)}
+                onPress={() => setDeleting(user)}
+              >
+                Eliminar
+              </Button>
+            </span>
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
-      <Card>
-        <CardHeader className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Usuarios</h2>
-            {isFetching && <Spinner size="sm" aria-label="Actualizando" />}
-          </div>
-          <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-            <Input
-              aria-label="Buscar usuarios"
-              placeholder="Buscar por nombre o correo"
-              value={searchInput}
-              onValueChange={(value) => {
-                setSearchInput(value);
-                setPage(1);
-              }}
-              startContent={<SearchIcon size={16} className="text-default-400" />}
-              className="w-full sm:max-w-xs"
-              isClearable
-              onClear={() => {
-                setSearchInput('');
-                setPage(1);
-              }}
-            />
-            <Button color="primary" onPress={openCreate}>
-              Nuevo usuario
-            </Button>
-          </div>
-        </CardHeader>
-        <CardBody>
-          <Table
-            aria-label="Usuarios"
-            removeWrapper
-            bottomContent={
-              totalPages > 1 ? (
-                <div className="flex justify-center">
-                  <Pagination showControls page={page} total={totalPages} onChange={setPage} />
-                </div>
-              ) : null
-            }
-          >
-            <TableHeader>
-              <TableColumn>NOMBRE</TableColumn>
-              <TableColumn>CORREO</TableColumn>
-              <TableColumn>ROL</TableColumn>
-              <TableColumn>ACTIVO</TableColumn>
-              <TableColumn>ÚLTIMO ACCESO</TableColumn>
-              <TableColumn align="end">ACCIONES</TableColumn>
-            </TableHeader>
-            <TableBody
-              items={users}
-              isLoading={isLoading}
-              loadingContent={<Spinner label="Cargando usuarios…" />}
-              emptyContent={isError ? toUserMessage(error) : 'No hay usuarios.'}
-            >
-              {(user: User) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    {user.name}
-                    {isSelf(user) && (
-                      <Chip size="sm" variant="flat" color="default" className="ml-2">
-                        Tú
-                      </Chip>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-default-500">{user.email}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color={user.role === 'admin' ? 'warning' : 'default'}
-                    >
-                      {user.role === 'admin' ? 'Administrador' : 'Usuario'}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip
-                      content={
-                        isSelf(user) && user.isActive
-                          ? 'No puedes desactivar tu propia cuenta'
-                          : user.isActive
-                            ? 'Desactivar'
-                            : 'Activar'
-                      }
-                    >
-                      <span className="inline-flex">
-                        <Switch
-                          size="sm"
-                          isSelected={user.isActive}
-                          isDisabled={isSelf(user) && user.isActive}
-                          onValueChange={() => handleToggle(user)}
-                          aria-label={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
-                        />
-                      </span>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>{formatDate(user.lastLogin)}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="flat" onPress={() => openEdit(user)}>
-                        Editar
-                      </Button>
-                      <Tooltip
-                        content={isSelf(user) ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'}
-                      >
-                        <span className="inline-flex">
-                          <Button
-                            size="sm"
-                            color="danger"
-                            variant="flat"
-                            isDisabled={isSelf(user)}
-                            onPress={() => setDeleting(user)}
-                          >
-                            Eliminar
-                          </Button>
-                        </span>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardBody>
-      </Card>
+      <DataTable
+        aria-label="Usuarios"
+        title={<h2 className="text-lg font-semibold">Usuarios</h2>}
+        columns={columns}
+        items={users}
+        getRowKey={(user) => user.id}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        errorMessage={isError ? toUserMessage(error) : null}
+        emptyContent="No hay usuarios."
+        search={{
+          value: searchInput,
+          onChange: (value) => {
+            setSearchInput(value);
+            setPage(1);
+          },
+          placeholder: 'Buscar por nombre o correo',
+        }}
+        sort={sort}
+        onSortChange={(next) => {
+          setSort(next);
+          setPage(1);
+        }}
+        pagination={{ page, totalPages, onChange: setPage }}
+        headerActions={
+          <Button color="primary" onPress={openCreate}>
+            Nuevo usuario
+          </Button>
+        }
+      />
 
       <UserFormModal
         isOpen={formOpen}

@@ -14,6 +14,7 @@ import {
 import { downloadDocument, toUserMessage } from '@/api/client';
 import { useDocument } from '@/hooks/useDocument';
 import { CategoryIcon } from '@/components/CategoryIcon';
+import { DocumentRatingPanel } from '@/components/DocumentRatingPanel';
 import { DocumentIcon, DownloadIcon } from '@/components/icons';
 import { toastError } from '@/lib/toast';
 import { formatDate, formatFileSize } from '@/lib/format';
@@ -113,14 +114,32 @@ export function DocumentDetail() {
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Row label="Autor">{document.authorName}</Row>
+            <Row label="Creador de post">{document.authorName}</Row>
             <Row label="Archivo">
               {document.fileName} · {document.fileExt.toUpperCase()} ·{' '}
               {formatFileSize(document.fileSize)}
             </Row>
-            <Row label="Publicado">{formatDate(dateValue)}</Row>
+            {document.publisherName && (
+              <Row label="Editorial">{document.publisherName}</Row>
+            )}
+            {document.writersNames && (
+              <Row label="Autor(es)">{document.writersNames}</Row>
+            )}
+            {document.yearIssue != null && (
+              <Row label="Año de publicación">{document.yearIssue}</Row>
+            )}
+            {document.pagesCount != null && (
+              <Row label="Cantidad de páginas">{document.pagesCount}</Row>
+            )}
+            <Row label="Publicación del post">{formatDate(dateValue)}</Row>
             <Row label="Descargas">{document.downloadCount}</Row>
           </div>
+
+          <DocumentRatingPanel
+            documentId={document.id}
+            average={document.ratingAverage}
+            count={document.ratingCount}
+          />
         </CardBody>
 
         <CardFooter className="gap-2">

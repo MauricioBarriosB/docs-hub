@@ -1,6 +1,6 @@
-import { Button, Card, CardBody, CardFooter, CardHeader, Skeleton, Spinner } from '@heroui/react';
+import { Button, Spinner } from '@heroui/react';
 import { toUserMessage } from '@/api/client';
-import { PAGE_SIZE, useDocuments } from '@/hooks/useDocuments';
+import { useDocuments } from '@/hooks/useDocuments';
 import { useInfiniteScrollSentinel } from '@/hooks/useInfiniteScrollSentinel';
 import { DocumentCard } from './DocumentCard';
 import { DocumentIcon } from './icons';
@@ -28,7 +28,11 @@ export function DocumentGrid({ search, categoryId }: Readonly<DocumentGridProps>
   });
 
   if (isLoading) {
-    return <SkeletonGrid />;
+    return (
+      <div className="flex h-64 w-full items-center justify-center">
+        <Spinner label="Cargando documentos…" />
+      </div>
+    );
   }
 
   if (isError) {
@@ -71,29 +75,6 @@ export function DocumentGrid({ search, categoryId }: Readonly<DocumentGridProps>
           <span className="text-xs text-default-400">No hay más documentos</span>
         )}
       </div>
-    </div>
-  );
-}
-
-function SkeletonGrid() {
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-        <Card key={index} className="h-52 border border-divider bg-content1" radius="lg">
-          <CardHeader className="gap-1.5">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </CardHeader>
-          <CardBody className="gap-2">
-            <Skeleton className="h-4 w-3/4 rounded-md" />
-            <Skeleton className="h-3 w-full rounded-md" />
-            <Skeleton className="h-3 w-5/6 rounded-md" />
-          </CardBody>
-          <CardFooter>
-            <Skeleton className="h-9 w-full rounded-large" />
-          </CardFooter>
-        </Card>
-      ))}
     </div>
   );
 }

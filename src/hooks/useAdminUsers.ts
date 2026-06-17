@@ -7,27 +7,32 @@ import {
   updateUser,
 } from '@/api/admin';
 import type { CreateUserRequest, UpdateUserRequest, UserListPayload } from '@/api/types';
+import type { DataTableSort } from '@/components/admin/DataTable';
 
 /** Users shown per admin page. */
 export const ADMIN_USER_PAGE_SIZE = 20;
 
 export const adminUserKeys = {
   all: ['admin', 'users'] as const,
-  list: (offset: number, search: string) =>
-    [...adminUserKeys.all, { offset, search }] as const,
+  list: (offset: number, search: string, sort: DataTableSort | null) =>
+    [...adminUserKeys.all, { offset, search, sort }] as const,
 };
 
 export interface UseAdminUsersParams {
   offset: number;
   search?: string;
+  sort?: DataTableSort | null;
 }
 
-/** Offset/limit paginated user list. */
-export function useAdminUsers({ offset, search }: UseAdminUsersParams) {
+/** Offset/limit paginated user list, sortable. */
+export function useAdminUsers({ offset, search, sort }: UseAdminUsersParams) {
   return useQuery<UserListPayload>({
-    queryKey: adminUserKeys.list(offset, search ?? ''),
+    queryKey: adminUserKeys.list(offset, search ?? '', sort ?? null),
     queryFn: ({ signal }) =>
-      fetchAdminUsers({ limit: ADMIN_USER_PAGE_SIZE, offset, search }, signal),
+      fetchAdminUsers(
+        { limit: ADMIN_USER_PAGE_SIZE, offset, search, sort: sort?.field, order: sort?.direction },
+        signal,
+      ),
     placeholderData: keepPreviousData,
     staleTime: 30 * 1000,
   });

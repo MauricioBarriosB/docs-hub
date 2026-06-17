@@ -1,21 +1,5 @@
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Input,
-  Pagination,
-  Select,
-  SelectItem,
-  Spinner,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-} from '@heroui/react';
+import { Button, Select, SelectItem } from '@heroui/react';
 import { toUserMessage } from '@/api/client';
 import type { DocumentItem, DocumentStatus } from '@/api/types';
 import {
@@ -27,10 +11,10 @@ import {
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { toastError, toastSuccess } from '@/lib/toast';
 import { formatDate } from '@/lib/format';
-import { SearchIcon } from '@/components/icons';
 import { StatusChip } from '@/components/admin/StatusChip';
 import { RejectModal } from '@/components/admin/RejectModal';
 import { DocumentDetailModal } from '@/components/admin/DocumentDetailModal';
+import { DataTable, type DataTableColumn, type DataTableSort } from '@/components/admin/DataTable';
 
 const STATUS_OPTIONS: { key: string; label: string }[] = [
   { key: 'pending', label: 'Pendientes' },
@@ -43,12 +27,18 @@ export function ModerationQueue() {
   const [statusKey, setStatusKey] = useState<string>('pending');
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
+  const [sort, setSort] = useState<DataTableSort | null>(null);
   const search = useDebouncedValue(searchInput, 300);
   const [rejecting, setRejecting] = useState<DocumentItem | null>(null);
   const [detail, setDetail] = useState<DocumentItem | null>(null);
 
   const status: DocumentStatus | null = statusKey === 'all' ? null : (statusKey as DocumentStatus);
-  const { data, isLoading, isError, error, isFetching } = useAdminDocuments({ status, page, search });
+  const { data, isLoading, isError, error, isFetching } = useAdminDocuments({
+    status,
+    page,
+    search,
+    sort,
+  });
   const approve = useApproveDocument();
   const reject = useRejectDocument();
 
@@ -78,130 +68,119 @@ export function ModerationQueue() {
     );
   }
 
+  const columns: DataTableColumn<DocumentItem>[] = [
+    {
+      key: 'title',
+      label: 'TÍTULO',
+      allowsSorting: true,
+      sortField: 'title',
+      render: (doc) => (
+        <button
+          type="button"
+          className="text-left font-medium text-foreground hover:text-primary"
+          onClick={() => setDetail(doc)}
+        >
+          {doc.title}
+        </button>
+      ),
+    },
+    {
+      key: 'author',
+      label: 'AUTOR',
+      allowsSorting: true,
+      sortField: 'author',
+      render: (doc) => doc.authorName ?? `#${doc.authorId}`,
+    },
+    {
+      key: 'createdAt',
+      label: 'CREADO',
+      allowsSorting: true,
+      sortField: 'created_at',
+      render: (doc) => formatDate(doc.createdAt),
+    },
+    {
+      key: 'status',
+      label: 'ESTADO',
+      allowsSorting: true,
+      sortField: 'status',
+      render: (doc) => <StatusChip status={doc.status} />,
+    },
+    {
+      key: 'actions',
+      label: 'ACCIONES',
+      align: 'end',
+      render: (doc) => (
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="flat" onPress={() => setDetail(doc)}>
+            Ver
+          </Button>
+          {doc.status !== 'published' && (
+            <Button
+              size="sm"
+              color="success"
+              variant="flat"
+              isLoading={approve.isPending && approve.variables === doc.id}
+              onPress={() => handleApprove(doc)}
+            >
+              Aprobar
+            </Button>
+          )}
+          {doc.status !== 'rejected' && (
+            <Button size="sm" color="danger" variant="flat" onPress={() => setRejecting(doc)}>
+              Rechazar
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
-      <Card>
-        <CardHeader className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold">Cola de moderación</h2>
-          <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-            {isFetching && <Spinner size="sm" aria-label="Actualizando" />}
-            <Input
-              aria-label="Buscar documentos"
-              placeholder="Buscar por título o descripción"
-              value={searchInput}
-              onValueChange={(value) => {
-                setSearchInput(value);
+      <DataTable
+        aria-label="Documentos para moderar"
+        title={<h2 className="text-lg font-semibold">Cola de moderación</h2>}
+        columns={columns}
+        items={items}
+        getRowKey={(doc) => doc.id}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        errorMessage={isError ? toUserMessage(error) : null}
+        emptyContent="No hay documentos en este estado."
+        search={{
+          value: searchInput,
+          onChange: (value) => {
+            setSearchInput(value);
+            setPage(1);
+          },
+          placeholder: 'Buscar por título o descripción',
+        }}
+        sort={sort}
+        onSortChange={(next) => {
+          setSort(next);
+          setPage(1);
+        }}
+        pagination={{ page, totalPages, onChange: setPage }}
+        toolbar={
+          <Select
+            aria-label="Filtrar por estado"
+            selectedKeys={[statusKey]}
+            onSelectionChange={(keys) => {
+              const next = [...keys][0];
+              if (typeof next === 'string') {
+                setStatusKey(next);
                 setPage(1);
-              }}
-              startContent={<SearchIcon size={16} className="text-default-400" />}
-              className="w-full sm:max-w-xs"
-              isClearable
-              onClear={() => {
-                setSearchInput('');
-                setPage(1);
-              }}
-            />
-            <Select
-              aria-label="Filtrar por estado"
-              selectedKeys={[statusKey]}
-              onSelectionChange={(keys) => {
-                const next = [...keys][0];
-                if (typeof next === 'string') {
-                  setStatusKey(next);
-                  setPage(1);
-                }
-              }}
-              className="w-40"
-              disallowEmptySelection
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <SelectItem key={option.key}>{option.label}</SelectItem>
-              ))}
-            </Select>
-          </div>
-        </CardHeader>
-        <CardBody>
-          <Table
-            aria-label="Documentos para moderar"
-            removeWrapper
-            bottomContent={
-              totalPages > 1 ? (
-                <div className="flex justify-center">
-                  <Pagination
-                    showControls
-                    page={page}
-                    total={totalPages}
-                    onChange={setPage}
-                  />
-                </div>
-              ) : null
-            }
-          >
-            <TableHeader>
-              <TableColumn>TÍTULO</TableColumn>
-              <TableColumn>AUTOR</TableColumn>
-              <TableColumn>CREADO</TableColumn>
-              <TableColumn>ESTADO</TableColumn>
-              <TableColumn align="end">ACCIONES</TableColumn>
-            </TableHeader>
-            <TableBody
-              items={items}
-              isLoading={isLoading}
-              loadingContent={<Spinner label="Cargando documentos…" />}
-              emptyContent={
-                isError ? toUserMessage(error) : 'No hay documentos en este estado.'
               }
-            >
-              {(doc: DocumentItem) => (
-                <TableRow key={doc.id}>
-                  <TableCell>
-                    <button
-                      type="button"
-                      className="text-left font-medium text-foreground hover:text-primary"
-                      onClick={() => setDetail(doc)}
-                    >
-                      {doc.title}
-                    </button>
-                  </TableCell>
-                  <TableCell>{doc.authorName ?? `#${doc.authorId}`}</TableCell>
-                  <TableCell>{formatDate(doc.createdAt)}</TableCell>
-                  <TableCell>
-                    <StatusChip status={doc.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="flat" onPress={() => setDetail(doc)}>
-                        Ver
-                      </Button>
-                      {doc.status !== 'published' && (
-                        <Button
-                          size="sm"
-                          color="success"
-                          variant="flat"
-                          isLoading={approve.isPending && approve.variables === doc.id}
-                          onPress={() => handleApprove(doc)}
-                        >
-                          Aprobar
-                        </Button>
-                      )}
-                      {doc.status !== 'rejected' && (
-                        <Button
-                          size="sm"
-                          color="danger"
-                          variant="flat"
-                          onPress={() => setRejecting(doc)}
-                        >
-                          Rechazar
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardBody>
-      </Card>
+            }}
+            className="w-40"
+            disallowEmptySelection
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <SelectItem key={option.key}>{option.label}</SelectItem>
+            ))}
+          </Select>
+        }
+      />
 
       <RejectModal
         isOpen={rejecting !== null}

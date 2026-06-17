@@ -29,6 +29,8 @@ function makeDoc(id: number): DocumentListItem {
     uploadedByName: 'Autor Demo',
     categories: [cat, tech],
     publishedAt: '2026-02-01T00:00:00Z',
+    ratingAverage: (id % 5) + 0.5,
+    ratingCount: id % 7,
   };
 }
 

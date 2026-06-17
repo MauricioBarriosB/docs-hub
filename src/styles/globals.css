@@ -52,3 +52,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--heroui-default-400));
 }
+
+/* HeroUI components (Pagination, Tabs, ScrollShadow, …) pair `overflow-*-scroll`
+ * with the `scrollbar-hide` utility to scroll without a visible scrollbar. Tailwind
+ * v4 doesn't ship that utility, and the global rules above (unlayered) would beat a
+ * layered `@utility` anyway — so define it here as plain CSS, after the global rules,
+ * where it wins by specificity (`.scrollbar-hide` > `*`). Without this a stray
+ * scrollbar paints under the Pagination nav (`overflow-x-scroll scrollbar-hide`). */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -51,7 +51,19 @@ export interface DocumentListItem {
   /** Uploader display name, joined server-side. */
   uploadedByName: string;
   publishedAt: string | null;
+  /** Average star rating (0 when nobody has rated yet). */
+  ratingAverage: number;
+  /** Number of ratings. */
+  ratingCount: number;
   categories: Category[];
+}
+
+/** Aggregate rating + the current user's own rating for a document. */
+export interface DocumentRating {
+  average: number;
+  count: number;
+  /** The signed-in user's rating (1–5), or null if they haven't rated. */
+  userRating: number | null;
 }
 
 export interface DocumentItem {
@@ -68,10 +80,34 @@ export interface DocumentItem {
   status: DocumentStatus;
   rejectReason: string | null;
   downloadCount: number;
+  /** Publisher / imprint name. */
+  publisherName: string | null;
+  /** Author(s) of the work (free text). */
+  writersNames: string | null;
+  /** Year of publication. */
+  yearIssue: number | null;
+  /** Page count. */
+  pagesCount: number | null;
+  /** Average star rating (0 when nobody has rated yet). */
+  ratingAverage: number;
+  /** Number of ratings. */
+  ratingCount: number;
   categories: Category[];
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** One row of the admin per-user download log. */
+export interface DownloadLogItem {
+  id: number;
+  documentId: number;
+  documentTitle: string | null;
+  userId: number;
+  userName: string | null;
+  userEmail: string | null;
+  ip: string | null;
+  downloadedAt: string;
 }
 
 /** Generic paginated payload shape returned inside the success envelope's `data`. */
@@ -157,6 +193,10 @@ export interface UpdateDocumentRequest {
   title?: string;
   description?: string | null;
   categoryIds?: number[];
+  publisherName?: string | null;
+  writersNames?: string | null;
+  yearIssue?: number | null;
+  pagesCount?: number | null;
 }
 
 export interface CreateCategoryRequest {

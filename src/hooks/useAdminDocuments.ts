@@ -13,32 +13,36 @@ import type {
   Paginated,
   UpdateDocumentRequest,
 } from '@/api/types';
+import type { DataTableSort } from '@/components/admin/DataTable';
 
 /** Documents shown per admin page. */
 export const ADMIN_DOC_PAGE_SIZE = 12;
 
 export const adminDocumentKeys = {
   all: ['admin', 'documents'] as const,
-  list: (status: DocumentStatus | null, page: number, search: string) =>
-    [...adminDocumentKeys.all, { status, page, search }] as const,
+  list: (status: DocumentStatus | null, page: number, search: string, sort: DataTableSort | null) =>
+    [...adminDocumentKeys.all, { status, page, search, sort }] as const,
 };
 
 export interface UseAdminDocumentsParams {
   status: DocumentStatus | null;
   page: number;
   search?: string;
+  sort?: DataTableSort | null;
 }
 
-/** Paginated admin document listing, filterable by status + search. */
-export function useAdminDocuments({ status, page, search }: UseAdminDocumentsParams) {
+/** Paginated admin document listing, filterable by status + search, sortable. */
+export function useAdminDocuments({ status, page, search, sort }: UseAdminDocumentsParams) {
   return useQuery<Paginated<DocumentItem>>({
-    queryKey: adminDocumentKeys.list(status, page, search ?? ''),
+    queryKey: adminDocumentKeys.list(status, page, search ?? '', sort ?? null),
     queryFn: ({ signal }) => {
       const query: AdminDocumentQuery = {
         page,
         perPage: ADMIN_DOC_PAGE_SIZE,
         status,
         search,
+        sort: sort?.field,
+        order: sort?.direction,
       };
       return fetchAdminDocuments(query, signal);
     },

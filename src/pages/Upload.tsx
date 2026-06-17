@@ -26,6 +26,10 @@ export function Upload() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [publisherName, setPublisherName] = useState('');
+  const [writersNames, setWritersNames] = useState('');
+  const [yearIssue, setYearIssue] = useState('');
+  const [pagesCount, setPagesCount] = useState('');
   const [categoryIds, setCategoryIds] = useState<Set<string>>(new Set());
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +54,10 @@ export function Upload() {
         description,
         categoryIds: [...categoryIds].map(Number),
         file,
+        publisherName,
+        writersNames,
+        yearIssue,
+        pagesCount,
       });
       setSuccess(true);
     } catch (err) {
@@ -90,6 +98,32 @@ export function Upload() {
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <Input isRequired label="Título" value={title} onValueChange={setTitle} />
           <Textarea label="Descripción" value={description} onValueChange={setDescription} />
+          <Input
+            label="Nombre de la editorial"
+            value={publisherName}
+            onValueChange={setPublisherName}
+          />
+          <Input
+            label="Nombre(s) de autor(es)"
+            value={writersNames}
+            onValueChange={setWritersNames}
+          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              type="number"
+              label="Año de publicación"
+              value={yearIssue}
+              onValueChange={setYearIssue}
+              min={0}
+            />
+            <Input
+              type="number"
+              label="Cantidad de páginas"
+              value={pagesCount}
+              onValueChange={setPagesCount}
+              min={0}
+            />
+          </div>
           <Select
             label="Categorías"
             selectionMode="multiple"

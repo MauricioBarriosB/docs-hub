@@ -5,6 +5,7 @@ import type { DocumentListItem } from '@/api/types';
 import { useAuth } from '@/context/AuthContext';
 import { formatDateShort } from '@/lib/format';
 import { CategoryIcon } from './CategoryIcon';
+import { StarRating } from './StarRating';
 
 interface DocumentCardProps {
   document: DocumentListItem;
@@ -55,6 +56,14 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
         <p className="text-xs text-default-400">
           Publicado por {document.uploadedByName} • {formatDateShort(dateValue)}
         </p>
+        <div className="flex items-center gap-1.5">
+          <StarRating value={document.ratingAverage} size={15} />
+          <span className="text-xs text-default-400">
+            {document.ratingCount > 0
+              ? `${document.ratingAverage.toFixed(1)} (${document.ratingCount})`
+              : 'Sin valoraciones'}
+          </span>
+        </div>
       </CardBody>
 
       <CardFooter className="pt-0">
