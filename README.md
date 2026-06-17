@@ -27,7 +27,8 @@ search and download the documents that have been **published**.
 
 ### Public site (no authentication)
 - **Document card grid** — responsive layout (3 columns on desktop) showing each document's
-  title, category chips (languages + technologies), uploader name and publication date.
+  title, category chips (languages + technologies), uploader name, publication date and its
+  **average star rating** (read-only) with the number of ratings.
 - **Infinite scroll** — the first page loads 12 cards; more are fetched automatically as you
   scroll, via an `IntersectionObserver` sentinel backed by TanStack Query's
   `useInfiniteQuery`.
@@ -54,12 +55,22 @@ search and download the documents that have been **published**.
 - **Document detail page** (`/documents/:id`) — a dedicated view with the full metadata and a
   download button. **Login is required** to open it; anonymous users are redirected to the
   login page and returned to the document after signing in.
+- **5-star ratings** — signed-in users rate a document from **1 to 5 stars**. A user has a
+  single rating per document and can **edit it** at any time (the submission upserts).
+  The interactive control lives on the detail page (with hover preview); the **average
+  rating + count** is shown read-only on both the home cards and the detail page, and
+  refreshes automatically after voting. A reusable `StarRating` component renders half-stars
+  for fractional averages and whole-star selection when interactive.
+- **Logged downloads** — downloading requires login, so every download is **attributed to
+  the user** and recorded server-side (the file is fetched as an authenticated, signed blob).
 
 ### Admin panel (`/admin`, role-guarded)
 - **Moderation queue** — list pending documents and **approve** / **reject (with reason)**.
 - **Documents management** — list, filter by status, edit, delete.
 - **Categories management** — CRUD for languages & technologies (name, slug, type, icon).
 - **Users management** — list, toggle active, change role, soft delete.
+- **Downloads log** — paginated, per-user record of **who downloaded which document and
+  when** (with IP), filterable by user. Answers "what has user X downloaded?".
 - All admin routes sit behind an auth **and** role check; non-admins are redirected.
 
 ### Security on the client
