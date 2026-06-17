@@ -175,6 +175,31 @@ See `backend/CLAUDE.md` for the authoritative data model and full API surface.
 
 ---
 
+## File uploads & storage
+
+How an uploaded document is handled end-to-end (enforced server-side / the SPA only sends the multipart form):
+
+- **Allowed types** — `doc, docx, pdf, txt, html, jpg, png`. Validated by **both** the file
+  extension **and** the real MIME type (detected via `finfo`/magic bytes, never the
+  client-sent header). A configurable **max size** is also enforced.
+- **Randomized on-disk name** — the file is saved as `bin2hex(random_bytes(16)).<ext>`
+  (e.g. `9f2c…c4d.pdf`). The original filename is **never** used to build the disk path, so
+  spaces or unusual characters in the uploaded name have **no** effect on storage and cannot
+  cause path traversal.
+- **Stored outside the web root** — files live in `backend/writable/uploads/`, not under
+  `public/`, so they are never directly reachable by URL.
+- **Sanitized display name** — a cleaned copy of the original filename is kept only for
+  display/download (`file_name`): characters outside `A-Z a-z 0-9 . _ -` and space are
+  replaced with `_`, **spaces are preserved**, the name is trimmed, capped at 120 chars, and
+  falls back to `document` if it ends up empty.
+- **Safe downloads** — downloads stream through a controller with
+  `Content-Disposition: attachment` and the correct `Content-Type`; uploaded HTML/content is
+  **never served inline** (avoids XSS / drive-by). Downloads require login and are fetched as
+  an authenticated, signed blob (see *Logged downloads* above), then saved with the sanitized
+  display name.
+
+---
+
 ## Deployment (GitHub Pages)
 
 The app is deployed to GitHub Pages via the workflow in `.github/workflows/deploy.yml`
