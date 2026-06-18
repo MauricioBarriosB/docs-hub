@@ -288,6 +288,66 @@ export async function downloadDocument(documentId: number, fileName: string): Pr
   }
 }
 
+/**
+ * In-memory cache of preview object URLs, keyed by document id. Reusing the URL means
+ * reopening a document in the same session does NOT re-hit the server (the user noticed
+ * the old approach re-fetched every time). URLs live for the page lifetime — acceptable
+ * for the handful a user opens; cleared on full reload.
+ */
+const previewUrlCache = new Map<number, string>();
+
+/**
+ * Open a document in a new browser tab for inline viewing.
+ *
+ * Hits the dedicated `/preview` endpoint (NOT `/download`): the backend serves it inline,
+ * does NOT increment download_count, and does NOT write a download-log row — viewing is
+ * not a download. Only inline-safe types are served (pdf, txt, jpg, png); for the rest the
+ * backend returns 415 and the caller surfaces its userMessage. Reuses the signed/auth'd
+ * `http` flow (a bare URL is rejected without the HMAC signature).
+ *
+ * The tab is opened synchronously inside the click gesture so popup blockers don't kill
+ * it during the async fetch, and `opener` is severed because an uploaded file could be
+ * hostile HTML (tabnabbing mitigation). The fetched Blob's object URL is cached so a
+ * second view reuses it instead of re-fetching.
+ */
+export async function viewDocument(documentId: number): Promise<void> {
+  const tab = window.open('about:blank', '_blank');
+  if (tab) tab.opener = null;
+
+  const openUrl = (url: string) => {
+    if (tab) {
+      tab.location.href = url;
+    } else {
+      // Popup blocked — fall back to a temporary anchor in the current document.
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    }
+  };
+
+  try {
+    const cached = previewUrlCache.get(documentId);
+    if (cached) {
+      openUrl(cached);
+      return;
+    }
+
+    const res = await http.get<Blob>(`/documents/${documentId}/preview`, {
+      responseType: 'blob',
+    });
+    const objectUrl = URL.createObjectURL(res.data);
+    previewUrlCache.set(documentId, objectUrl);
+    openUrl(objectUrl);
+  } catch (err) {
+    if (tab) tab.close();
+    throw err;
+  }
+}
+
 /** Narrow an unknown caught value to a user-displayable message. */
 export function toUserMessage(err: unknown): string {
   if (err instanceof ApiError) return err.userMessage;

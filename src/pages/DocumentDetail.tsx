@@ -11,7 +11,7 @@ import {
   Chip,
   Spinner,
 } from '@heroui/react';
-import { downloadDocument, toUserMessage } from '@/api/client';
+import { downloadDocument, viewDocument, toUserMessage } from '@/api/client';
 import { useDocument } from '@/hooks/useDocument';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { DocumentRatingPanel } from '@/components/DocumentRatingPanel';
@@ -35,6 +35,7 @@ export function DocumentDetail() {
   const numericId = id !== undefined ? Number(id) : undefined;
   const { data: document, isLoading, isError, error, refetch } = useDocument(numericId);
   const [downloading, setDownloading] = useState(false);
+  const [viewing, setViewing] = useState(false);
 
   const handleDownload = async () => {
     if (!document) return;
@@ -45,6 +46,18 @@ export function DocumentDetail() {
       toastError(err, 'No se pudo descargar el documento');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleView = async () => {
+    if (!document) return;
+    setViewing(true);
+    try {
+      await viewDocument(document.id);
+    } catch (err) {
+      toastError(err, 'No se pudo abrir el documento');
+    } finally {
+      setViewing(false);
     }
   };
 
@@ -145,6 +158,16 @@ export function DocumentDetail() {
         <CardFooter className="gap-2">
           <Button variant="flat" onPress={() => navigate('/')}  startContent={<Icon icon="mdi:arrow-left" width={18} height={18} aria-hidden />}>
             Volver
+          </Button>
+          <Button
+            color="primary"
+            variant="flat"
+            isLoading={viewing}
+            onPress={handleView}
+            startContent={viewing ? undefined : <Icon icon="mdi:eye-outline" width={18} height={18} aria-hidden />}
+            aria-label={`Ver ${document.title}`}
+          >
+            Ver documento
           </Button>
           <Button
             color="primary"
